@@ -1,4 +1,4 @@
 FROM node:latest
 RUN npm install hexo-cli -g
-RUN npm install hexo-browsersync --save
-CMD "cd /workspace/blog&& npm install && hexo server"
+RUN npm install hexo-browsersync --save -g
+CMD cd /workspace/blog && npm install && hexo server
