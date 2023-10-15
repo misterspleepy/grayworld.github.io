@@ -26,7 +26,7 @@ jobs:
       - name: Install Dependencies
         run: cd blog && npm install
       - name: Build
-        run: cd blog && hexo generate
+        run: cd blog && npm run build
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
