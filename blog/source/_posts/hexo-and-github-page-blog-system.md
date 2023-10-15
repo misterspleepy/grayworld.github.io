@@ -20,5 +20,12 @@ hexo是一个静态网站生成工具
 ### Github仓库配置
 - 新建或重命名仓库名，以github.io结尾
 ### 本地环境搭建
-
+- 安装docker
+- 将代码仓从github clone到本地目录
+- 本地执行NODE容器，安装hexo
+- 参考hexo相关文档，执行hexo init创建网站
+- 执行hexo server，并本地查看网站效果
+- 将修改commit，push到远端master分支
 ### 自动化集成和部署
+- 写worker flow，具体参考本仓.github/workflows/pages.yml
+- 在github上打开本仓的设置，配置pages/deploy选项
