@@ -39,3 +39,8 @@ $ hexo deploy
 ```
 
 More info: [Deployment](https://hexo.io/docs/one-command-deployment.html)
+
+## Reference
+
+- [hexo document in chinese](https://hexo.io/zh-cn/docs/configuration)
+
