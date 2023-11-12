@@ -21,6 +21,9 @@ pretty_urls:
   trailing_html: true # Set to false to remove trailing '.html' from permalinks
 # asset
 post_asset_folder: true
+marked:
+  prependRoot: true
+  postAsset: true
 # Directory
 source_dir: source
 public_dir: public
@@ -98,6 +101,25 @@ ignore:
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
 theme: hexo-theme-yilia
+
+jsonContent:
+  meta: false
+  pages: false
+  posts:
+    title: true
+    date: true
+    path: true
+    text: false
+    raw: false
+    content: false
+    slug: false
+    updated: false
+    comments: false
+    link: false
+    permalink: false
+    excerpt: false
+    categories: false
+    tags: true
 
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
