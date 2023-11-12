@@ -254,6 +254,151 @@
 
 
   
+    <article id="post-docker-cpp-dev" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/grayworld.github.io/2023/11/12/docker-cpp-dev/">使用Docker构建cpp开发环境</a>
+    </h1>
+  
+
+        
+        <a href="/grayworld.github.io/2023/11/12/docker-cpp-dev/" class="archive-article-date">
+  	<time datetime="2023-11-12T02:11:08.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-11-12</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="特性"><a href="#特性" class="headerlink" title="特性"></a>特性</h2><ul>
+<li>内置gnuc编译链</li>
+<li>ubuntu 22.04</li>
+<li>ssh服务</li>
+<li>使用volumn持久化数据</li>
+</ul>
+<h2 id="配置步骤"><a href="#配置步骤" class="headerlink" title="配置步骤"></a>配置步骤</h2><ol>
+<li>创建目录cpp_env</li>
+<li>将附录中的文件拷贝到该目录中</li>
+<li>创建docker image<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker build -t cppenv:latest ..</span><br></pre></td></tr></table></figure></li>
+<li>启动docker容器<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -v volumn:/home -p 5000:22 cppenv</span><br><span class="line"><span class="comment"># 其中-d为后台运行</span></span><br><span class="line"><span class="comment"># -v volumn：/home将卷挂在到/home目录，volumn可以通过docker volumn命令生成</span></span><br><span class="line"><span class="comment"># -p 5000:22: 这个非常重要，将5000端口映射到22端口，host可以通过localhost：5000访问该容器</span></span><br></pre></td></tr></table></figure></li>
+<li>使用ssh登入容器<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh -p 5000 root@localhost</span><br></pre></td></tr></table></figure></li>
+<li>创建自己的账号<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adduser test</span><br></pre></td></tr></table></figure></li>
+<li>使用vscode连接容器</li>
+</ol>
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><p>Dockerfile:</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> ubuntu:<span class="number">22.04</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get update</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get install apt-transport-https -y --fix-missing</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get install ca-certificates -y</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> sources.list /etc/apt/</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get update &amp;&amp; \</span></span><br><span class="line"><span class="language-bash">    apt-get -y install sudo</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get install -y build-essential</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> DEBIAN_FRONTEND=noninteractive apt-get install -y cmake</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get install -y gdb --fix-missing</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get install -y net-tools gdb --fix-missing</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get install -y openssh-server</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> <span class="built_in">mkdir</span> /var/run/sshd</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> sed -ri <span class="string">&#x27;s/^#PermitRootLogin\s+.*/PermitRootLogin yes/&#x27;</span> /etc/ssh/sshd_config</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> sed -ri <span class="string">&#x27;s/UsePAM yes/#UsePAM yes/g&#x27;</span> /etc/ssh/sshd_config</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> <span class="built_in">echo</span> <span class="string">&#x27;root:root&#x27;</span> |chpasswd</span></span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">22</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> entrypoint.sh /sbin</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> <span class="built_in">chmod</span> +x /sbin/entrypoint.sh</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span><span class="language-bash"> [ <span class="string">&quot;/sbin/entrypoint.sh&quot;</span> ]</span></span><br></pre></td></tr></table></figure>
+<p>entrypoint.sh</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"></span><br><span class="line">/usr/sbin/sshd -D</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"># 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释</span><br><span class="line">deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy main restricted universe multiverse</span><br><span class="line"># deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy main restricted universe multiverse</span><br><span class="line">deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy-updates main restricted universe multiverse</span><br><span class="line"># deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy-updates main restricted universe multiverse</span><br><span class="line">deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy-backports main restricted universe multiverse</span><br><span class="line"># deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy-backports main restricted universe multiverse</span><br><span class="line"></span><br><span class="line"># deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy-security main restricted universe multiverse</span><br><span class="line"># # deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy-security main restricted universe multiverse</span><br><span class="line"></span><br><span class="line">deb http://ports.ubuntu.com/ubuntu-ports/ jammy-security main restricted universe multiverse</span><br><span class="line"># deb-src http://ports.ubuntu.com/ubuntu-ports/ jammy-security main restricted universe multiverse</span><br><span class="line"></span><br><span class="line"># 预发布软件源，不建议启用</span><br><span class="line"># deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy-proposed main restricted universe multiverse</span><br><span class="line"># # deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy-proposed main restricted universe multiverse</span><br></pre></td></tr></table></figure>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/grayworld.github.io/2023/11/12/docker-cpp-dev/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-linux-kernel-learn" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/grayworld.github.io/2023/10/22/linux-kernel-learn/">linux内核相关经验</a>
+    </h1>
+  
+
+        
+        <a href="/grayworld.github.io/2023/10/22/linux-kernel-learn/" class="archive-article-date">
+  	<time datetime="2023-10-22T14:11:08.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-10-22</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="linux内核相关经验"><a href="#linux内核相关经验" class="headerlink" title="linux内核相关经验"></a>linux内核相关经验</h2><h3 id="开发环境"><a href="#开发环境" class="headerlink" title="开发环境"></a>开发环境</h3><p><a target="_blank" rel="noopener" href="https://wenfh2020.com/2021/12/03/ubuntu-qemu-linux/">https://wenfh2020.com/2021/12/03/ubuntu-qemu-linux/</a></p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/grayworld.github.io/2023/10/22/linux-kernel-learn/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
     <article id="post-os" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
@@ -274,7 +419,21 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="linux内核开发工程师-专家"><a href="#linux内核开发工程师-专家" class="headerlink" title="linux内核开发工程师&#x2F;专家"></a>linux内核开发工程师&#x2F;专家</h2><h1 id><a href="#" class="headerlink" title></a><img src="/grayworld.github.io/grayworld.github/image-1.png" alt="Alt text"></h1>
+        <h2 id="linux内核开发工程师-专家"><a href="#linux内核开发工程师-专家" class="headerlink" title="linux内核开发工程师&#x2F;专家"></a>linux内核开发工程师&#x2F;专家</h2><p><img src="/grayworld.github.io/grayworld.github/os/WechatIMG226.jpg" alt="Alt text"></p>
+<p><img src="/grayworld.github.io/grayworld.github/2023/10/16/os/image.png" alt="Alt text"></p>
+<p><img src="/grayworld.github.io/grayworld.github/2023/10/16/os/image-1.png" alt="Alt text"></p>
+<h2 id="简历"><a href="#简历" class="headerlink" title="简历"></a>简历</h2><h3 id="项目经历"><a href="#项目经历" class="headerlink" title="项目经历"></a>项目经历</h3><h4 id="某分布式作业系统的客户端软件项目"><a href="#某分布式作业系统的客户端软件项目" class="headerlink" title="某分布式作业系统的客户端软件项目"></a>某分布式作业系统的客户端软件项目</h4><p>C++&#x2F;QT软件开发工程师<br>本项目提供易用、架构稳定的客户端软件，该软件为客户提供分布式作业配置，提交，结果的交互界面。本人主要</p>
+<ol>
+<li>负责软件整体框架设计和开发。累计贡献代码量超过1W行，提供基础组件几十个；</li>
+<li>负责设计和开发GDS版图浏览器。协同底层版图库组件，通过识别端到端性能瓶颈进行了多轮优化，目前性能已基本持平业界竞品软件（Klayout）；</li>
+<li>参与软件质量守护和架构优化。作为Committer（开发约25人，committer共3人）负责代码检视、合入，月均输出约三十余条有效检视意见；负责CI&#x2F;CD框架搭建、维护以及培训；开展多轮腐化代码重构。</li>
+</ol>
+<h4 id="某分布式作业系统项目（HPC）"><a href="#某分布式作业系统项目（HPC）" class="headerlink" title="某分布式作业系统项目（HPC）"></a>某分布式作业系统项目（HPC）</h4><p>C++软件开发工程师<br>本项目向客户提供软硬件兼顾的分布式高性能集群作业系统，主要运用于气象预报，计算模拟以及基因测序等场景。本人主要</p>
+<ol>
+<li>分析，识别大规模业务场景下（1W core）集群存在的性能瓶颈和稳定性问题，并进行对应提升。输出性能调优经验十余篇，性能分析工具若干，发现和解决多个严重阻塞问题。</li>
+<li>接手并维护遗留数据库模块，通过代码重构和守护用例的完善，解决了该模块长期问题不收敛，功能不稳定等严重问题。</li>
+</ol>
+<!--  -->
       
 
       
@@ -642,88 +801,6 @@
       
         <p class="article-more-link">
           <a class="article-more-a" href="/grayworld.github.io/2023/10/15/hello-world/">展开全文 >></a>
-        </p>
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-  </div>
-</article>
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-
-  
-    <article id="post-docker-cpp-dev" class="article article-type-post  article-index" itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/grayworld.github.io/2023/10/15/docker-cpp-dev/">使用Docker构建cpp开发环境</a>
-    </h1>
-  
-
-        
-        <a href="/grayworld.github.io/2023/10/15/docker-cpp-dev/" class="archive-article-date">
-  	<time datetime="2023-10-15T02:11:08.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-10-15</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="特性"><a href="#特性" class="headerlink" title="特性"></a>特性</h2><ul>
-<li>内置gnuc编译链</li>
-<li>ubuntu 22.04</li>
-<li>ssh服务</li>
-<li>使用volumn持久化数据</li>
-</ul>
-<h2 id="配置步骤"><a href="#配置步骤" class="headerlink" title="配置步骤"></a>配置步骤</h2><ol>
-<li>创建目录cpp_env</li>
-<li>将附录中的文件拷贝到该目录中</li>
-<li>创建docker image<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker build -t cppenv:latest ..</span><br></pre></td></tr></table></figure></li>
-<li>启动docker容器<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -v volumn:/home -p 5000:22 cppenv</span><br><span class="line"><span class="comment"># 其中-d为后台运行</span></span><br><span class="line"><span class="comment"># -v volumn：/home将卷挂在到/home目录，volumn可以通过docker volumn命令生成</span></span><br><span class="line"><span class="comment"># -p 5000:22: 这个非常重要，将5000端口映射到22端口，host可以通过localhost：5000访问该容器</span></span><br></pre></td></tr></table></figure></li>
-<li>使用ssh登入容器<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh -p 5000 root@localhost</span><br></pre></td></tr></table></figure></li>
-<li>创建自己的账号<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adduser test</span><br></pre></td></tr></table></figure></li>
-<li>使用vscode连接容器</li>
-</ol>
-<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><p>Dockerfile:</p>
-<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> ubuntu:<span class="number">22.04</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get update</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get install apt-transport-https -y --fix-missing</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get install ca-certificates -y</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> sources.list /etc/apt/</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get update &amp;&amp; \</span></span><br><span class="line"><span class="language-bash">    apt-get -y install sudo</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get install -y build-essential</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> DEBIAN_FRONTEND=noninteractive apt-get install -y cmake</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get install -y gdb --fix-missing</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get install -y net-tools gdb --fix-missing</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> apt-get install -y openssh-server</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> <span class="built_in">mkdir</span> /var/run/sshd</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> sed -ri <span class="string">&#x27;s/^#PermitRootLogin\s+.*/PermitRootLogin yes/&#x27;</span> /etc/ssh/sshd_config</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> sed -ri <span class="string">&#x27;s/UsePAM yes/#UsePAM yes/g&#x27;</span> /etc/ssh/sshd_config</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> <span class="built_in">echo</span> <span class="string">&#x27;root:root&#x27;</span> |chpasswd</span></span><br><span class="line"><span class="keyword">EXPOSE</span> <span class="number">22</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> entrypoint.sh /sbin</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> <span class="built_in">chmod</span> +x /sbin/entrypoint.sh</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span><span class="language-bash"> [ <span class="string">&quot;/sbin/entrypoint.sh&quot;</span> ]</span></span><br></pre></td></tr></table></figure>
-<p>entrypoint.sh</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"></span><br><span class="line">/usr/sbin/sshd -D</span><br></pre></td></tr></table></figure>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"># 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释</span><br><span class="line">deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy main restricted universe multiverse</span><br><span class="line"># deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy main restricted universe multiverse</span><br><span class="line">deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy-updates main restricted universe multiverse</span><br><span class="line"># deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy-updates main restricted universe multiverse</span><br><span class="line">deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy-backports main restricted universe multiverse</span><br><span class="line"># deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy-backports main restricted universe multiverse</span><br><span class="line"></span><br><span class="line"># deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy-security main restricted universe multiverse</span><br><span class="line"># # deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy-security main restricted universe multiverse</span><br><span class="line"></span><br><span class="line">deb http://ports.ubuntu.com/ubuntu-ports/ jammy-security main restricted universe multiverse</span><br><span class="line"># deb-src http://ports.ubuntu.com/ubuntu-ports/ jammy-security main restricted universe multiverse</span><br><span class="line"></span><br><span class="line"># 预发布软件源，不建议启用</span><br><span class="line"># deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy-proposed main restricted universe multiverse</span><br><span class="line"># # deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/ jammy-proposed main restricted universe multiverse</span><br></pre></td></tr></table></figure>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-        <p class="article-more-link">
-          <a class="article-more-a" href="/grayworld.github.io/2023/10/15/docker-cpp-dev/">展开全文 >></a>
         </p>
       
 
